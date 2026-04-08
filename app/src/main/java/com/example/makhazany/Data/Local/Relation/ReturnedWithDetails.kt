@@ -6,10 +6,7 @@ import com.example.makhazany.Data.Local.Entity.ReturnedDetailsEntity
 import com.example.makhazany.Data.Local.Entity.ReturnedEntity
 
 data class ReturnedWithDetails(
-
-    @Embedded
-    val returned: ReturnedEntity,
-
+    @Embedded val returned: ReturnedEntity,
     @Relation(
         parentColumn = "id",
         entityColumn = "returnedId"

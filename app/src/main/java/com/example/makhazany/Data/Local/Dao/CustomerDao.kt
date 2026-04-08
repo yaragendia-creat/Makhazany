@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.example.smartstock.Data.Local.E.CustomerEntity
+import com.example.makhazany.Data.Local.Entity.CustomerEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -16,7 +16,6 @@ interface CustomerDao {
     )
 
     @Query("SELECT * FROM customer")
-    fun getCustomers():
-            Flow<List<CustomerEntity>>
+    fun getCustomers(): Flow<List<CustomerEntity>>
 
 }

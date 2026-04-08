@@ -3,7 +3,7 @@ package com.example.makhazany.Data.Local.Dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import com.example.smartstock.Data.Local.Entity.InboundEntity
+import com.example.makhazany.Data.Local.Entity.InboundEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -14,8 +14,10 @@ interface InboundDao {
         inbound: InboundEntity
     )
 
+    @Query("SELECT * FROM inbound WHERE itemId = :itemId ORDER BY inboundDate DESC")
+    fun getInboundByItem(itemId: Int): Flow<List<InboundEntity>>
+
     @Query("SELECT * FROM inbound")
-    fun getInbound():
-            Flow<List<InboundEntity>>
+    fun getInbound(): Flow<List<InboundEntity>>
 
 }
