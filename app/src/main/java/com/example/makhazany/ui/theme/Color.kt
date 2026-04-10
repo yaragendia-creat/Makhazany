@@ -2,7 +2,7 @@ package com.example.makhazany.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val PrimaryPurple = Color(0xFF5D3A8F)
+val PrimaryPurple = Color(0xFF560A64)
 val SecondaryPurple = Color(0xFFF3EFFF)
 val LightGray = Color(0xFFF8F9FA)
 val TextDark = Color(0xFF2D3436)

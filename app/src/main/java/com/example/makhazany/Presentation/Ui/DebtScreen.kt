@@ -1,20 +1,29 @@
 package com.example.makhazany.Presentation.Ui
 
+import android.widget.Toast
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,27 +36,51 @@ import com.example.makhazany.Data.Local.Entity.CustomerEntity
 fun DebtScreen(viewModel: CustomerViewModel) {
     val customers by viewModel.customers.collectAsState()
     val totalDebt by viewModel.totalDebt.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("إدارة المخزن", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
-                navigationIcon = { IconButton(onClick = {}) { Icon(Icons.Default.Menu, contentDescription = null) } },
-                actions = {
-                    IconButton(onClick = {}) { Icon(Icons.Default.Notifications, contentDescription = null) }
-                    IconButton(onClick = {}) { Icon(Icons.Default.Search, contentDescription = null) }
+            CenterAlignedTopAppBar(
+                title = { 
+                    Text(
+                        "إدارة المخزن", 
+                        fontWeight = FontWeight.ExtraBold,
+                        color = PrimaryPurple
+                    ) 
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                navigationIcon = { 
+                    InteractiveIconButton(
+                        icon = Icons.Default.Menu,
+                        onClick = { /* Menu logic */ }
+                    )
+                },
+                actions = { 
+                    InteractiveIconButton(
+                        icon = Icons.Default.Notifications,
+                        badgeCount = 3,
+                        onClick = { Toast.makeText(context, "لا توجد إشعارات جديدة", Toast.LENGTH_SHORT).show() }
+                    )
+                    InteractiveIconButton(
+                        icon = Icons.Default.Search,
+                        onClick = { /* Search logic */ }
+                    )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.White)
             )
         },
         floatingActionButton = {
+            val interactionSource = remember { MutableInteractionSource() }
+            val isPressed by interactionSource.collectIsPressedAsState()
+            val scale by animateFloatAsState(if (isPressed) 0.85f else 1f, label = "fabScale")
+
             FloatingActionButton(
                 onClick = {},
                 containerColor = PrimaryPurple,
                 contentColor = Color.White,
-                shape = CircleShape
+                shape = CircleShape,
+                modifier = Modifier.scale(scale),
+                interactionSource = interactionSource
             ) {
-
                 Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
             }
         }
@@ -58,13 +91,12 @@ fun DebtScreen(viewModel: CustomerViewModel) {
                 .fillMaxSize()
                 .background(LightGray)
         ) {
-            // Header Section
-            Card(
+            // Header Section with Animation
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp),
-                colors = CardDefaults.cardColors(containerColor = PrimaryPurple),
-                shape = RoundedCornerShape(bottomStart = 0.dp, bottomEnd = 0.dp)
+                    .height(180.dp)
+                    .background(PrimaryPurple)
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -72,67 +104,86 @@ fun DebtScreen(viewModel: CustomerViewModel) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("إجمالي مديونيات العملاء", color = Color.White.copy(alpha = 0.8f), fontSize = 16.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    val animatedTotalDebt by animateFloatAsState(
+                        targetValue = totalDebt.toFloat(),
+                        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+                        label = "totalDebtAnimation"
+                    )
+                    
                     Text(
-                        "${String.format("%.2f", totalDebt)} ج.م",
+                        "${String.format("%.2f", animatedTotalDebt)} ج.م",
                         color = Color.White,
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.ExtraBold
                     )
                 }
             }
 
-
+            // Interactive Filter Bar
             Card(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
-                    .offset(y = (-20).dp)
+                    .offset(y = (-30).dp)
                     .fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(4.dp)
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(8.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.FilterList, contentDescription = null, tint = PrimaryPurple)
-                        Text(" تصفية النتائج", fontSize = 14.sp)
-                    }
-                    VerticalDivider(modifier = Modifier.height(20.dp).padding(horizontal = 8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("ترتيب حسب الأحدث ", fontSize = 14.sp)
-                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
-                    }
-                }
-            }
-
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("قائمة المديونيات", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Surface(
-                    color = Color.LightGray.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        "${customers.size} عميل",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        fontSize = 12.sp,
-                        color = TextGray
+                    FilterActionItem(
+                        icon = Icons.Default.FilterList,
+                        text = "تصفية النتائج",
+                        onClick = { /* Filter logic */ }
+                    )
+                    
+                    VerticalDivider(modifier = Modifier.height(24.dp).width(1.dp), color = LightGray)
+                    
+                    FilterActionItem(
+                        icon = Icons.Default.KeyboardArrowDown,
+                        text = "ترتيب حسب الأحدث",
+                        trailingIcon = true,
+                        onClick = { /* Sort logic */ }
                     )
                 }
             }
 
+            // List Title Section
+            Row(
+                modifier = Modifier.padding(horizontal = 24.dp).padding(top = 0.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("قائمة المديونيات", fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, color = PrimaryPurple)
+                
+                Surface(
+                    color = SecondaryPurple.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        "${customers.size} عميل",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryPurple
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Interactive Lazy Column
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                contentPadding = PaddingValues(bottom = 100.dp, start = 16.dp, end = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(customers) { customer ->
+                items(customers, key = { it.id }) { customer ->
                     CustomerDebtItem(customer)
                 }
             }
@@ -141,46 +192,91 @@ fun DebtScreen(viewModel: CustomerViewModel) {
 }
 
 @Composable
+fun FilterActionItem(
+    icon: ImageVector,
+    text: String,
+    trailingIcon: Boolean = false,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "filterItemScale")
+
+    Row(
+        modifier = Modifier
+            .scale(scale)
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (!trailingIcon) {
+            Icon(icon, contentDescription = null, tint = PrimaryPurple, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        Text(text, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TextGray)
+        if (trailingIcon) {
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(icon, contentDescription = null, tint = PrimaryPurple, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+@Composable
 fun CustomerDebtItem(customer: CustomerEntity) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.97f else 1f, label = "itemScale")
+    val elevation by animateDpAsState(if (isPressed) 0.dp else 4.dp, label = "itemElevation")
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .scale(scale)
+            .clickable(interactionSource = interactionSource, indication = null) { /* Detail logic */ },
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(elevation)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                modifier = Modifier.size(50.dp),
-                color = SecondaryPurple,
+                modifier = Modifier.size(56.dp),
+                color = SecondaryPurple.copy(alpha = 0.5f),
                 shape = CircleShape
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         customer.customerName.take(1),
                         color = PrimaryPurple,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 24.sp
                     )
                 }
             }
             
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             
             Column(modifier = Modifier.weight(1f)) {
-                Text(customer.customerName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(customer.customerType + " - " + customer.address, color = TextGray, fontSize = 12.sp)
+                Text(customer.customerName, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    "${customer.customerType} - ${customer.address}", 
+                    color = TextGray, 
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
             }
             
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    "${customer.customerDebt} ج.م",
+                    "ج.م ${String.format("%.1f", customer.customerDebt)}",
                     color = DebtRed,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp
                 )
-                Text("آخر تحديث: منذ ساعتين", color = TextGray, fontSize = 10.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("منذ ساعتين", color = Color.Gray, fontSize = 10.sp)
             }
         }
     }
